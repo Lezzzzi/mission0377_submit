@@ -1,0 +1,53 @@
+div.drag-scroll-content{
+
+  display: flex;
+
+  justify-content: flex-start;
+
+  gap: 16px;
+
+}
+
+div.lezi_drag-scroll-container{
+    overflow: hidden;
+    width: 980px;
+    
+    user-select: none; 
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+div.submit_text{
+
+  width: 264px;
+
+  height: 224px;
+
+  background-color: #f3f3ed;
+
+  padding: 16px;
+
+  border-radius: 16px;
+
+  color: #282828;
+
+  flex-shrink: 0; 
+
+  flex-grow: 0;
+
+}
+
+div.submit_text_title_bar .title{
+
+  font-weight: bold;
+
+}
+
+div.submit_text_summary{
+
+  padding-left: 8px;
+
+  margin-top: 8px;
+
+}

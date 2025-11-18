@@ -122,4 +122,13 @@ html {
     div.lezi_drag-scroll-container.is-dragging {
     cursor: grabbing;
     }
+    
+    
+@media (max-width: 719px){
+    
+    div.drag-scroll-content{
+
+        gap: 16px;
+    
+}
 

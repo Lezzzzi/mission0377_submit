@@ -21,7 +21,10 @@ html {
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
-        
+        /*overflow-x: scroll;*/  /*for transform*/
+        /*scroll-behavior: smooth;*/ /*for transform*/
+        cursor: default;       /* 讓滑鼠游標顯示為可抓取 */
+        scrollbar-width: none;
     }
     
     div.drag-scroll-content{
@@ -29,6 +32,7 @@ html {
         display: flex;
         justify-content: flex-start;
         gap: 20px;
+        will-change: transform;
 
     }
     
@@ -98,6 +102,7 @@ html {
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
+        draggable: false;
         
     }
     div.submit_pic_title{
@@ -113,11 +118,6 @@ html {
         font-weight: bold;
         z-index: 2;
     }
-    div.lezi_drag-scroll-container {
-        overflow-x: scroll; /* 允許水平滾動 */
-        cursor: grab;       /* 讓滑鼠游標顯示為可抓取 */
-        scrollbar-width: none;
-    }
     
     div.lezi_drag-scroll-container.is-dragging {
     cursor: grabbing;
@@ -128,7 +128,8 @@ html {
     
     div.drag-scroll-content{
 
-        gap: 16px;
+        gap: 12px;
     
 }
+
 

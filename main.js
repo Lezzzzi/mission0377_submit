@@ -1,106 +1,139 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 選擇作為滾動容器的元素
     const slider = document.querySelector('.lezi_drag-scroll-container');
+    const content = document.querySelector('.drag-scroll-content');
     
-    // 如果找不到元素，則停止執行
-    if (!slider) {
-        console.error("找不到滾動容器 '.lezi_drag-scroll-container'");
+    if (!slider || !content) {
+        console.error("找不到滾動容器或內容區塊。");
         return;
     }
 
-    let isDown = false; // 追蹤滑鼠是否被按下
-    let startX;         // 滑鼠按下時的起始 X 座標
-    let scrollLeft;     // 滑鼠按下時，容器的起始滾動位置
+    // --- 初始化和參數設定 ---
+    
+    // 1. 確保內容複製 (用於無縫循環)
+    // 如果 HTML 中沒有，這裡動態複製
+    if (content.children.length > 0 && content.children.length % 2 !== 0) {
+        const originalContent = content.innerHTML;
+        content.innerHTML += originalContent; 
+    }
+    
+    // 2. 輪播參數
+    const contentWidth = content.scrollWidth / 2; // 原始內容的總寬度
+    const scrollSpeed = 0.5; // 每幀移動的像素數 (自動輪播速度)
+    let currentPosition = 0; // 目前的 X 軸位移量 (負值，因為是向左移動)
 
-    // ===================================
-    // 1. 滑鼠按下事件 (mousedown)
-    // ===================================
-    slider.addEventListener('mousedown', (e) => {
-        
-        isDown = true;
-        // 可選：為容器添加 CSS class 來改變游標樣式，例如變為 'grabbing'
-        // slider.classList.add('is-dragging'); 
+    let animationFrameId;
+    let isMarqueeRunning = true; // 自動輪播是否正在運行
 
-        // e.pageX 是滑鼠相對於整個文件左側的 X 座標
-        // slider.offsetLeft 是容器相對於其 offset 父元素的左側距離
-        // 兩者相減得到滑鼠相對於容器左側邊緣的 X 座標
-        startX = e.pageX - slider.offsetLeft; 
-        
-        // 記錄當前的滾動位置
-        scrollLeft = slider.scrollLeft;
-    });
+    // --- 核心：自動輪播動畫函數 ---
+    function marquee() {
+        if (!isMarqueeRunning) return;
 
-    // ===================================
-    // 2. 滑鼠停止事件 (mouseup & mouseleave)
-    // ===================================
+        // 1. 計算新的位置
+        currentPosition -= scrollSpeed; 
 
-    // 滑鼠放開時，停止拖曳
-    // 注意：這個事件要註冊在 document 上，這樣即使滑鼠拖曳到容器外放開，也能停止
-    document.addEventListener('mouseup', () => {
-        isDown = false;
-        // slider.classList.remove('is-dragging');
-    });
+        // 2. 檢查循環邊界：是否滾動超過了原始內容的總寬度
+        if (currentPosition <= -contentWidth) {
+            // 立即跳回起點 (實現無縫循環)
+            currentPosition += contentWidth; // 或直接 currentPosition = 0;
+            // 由於內容被複製了一份，這裡只要跳過一個 contentWidth 的距離即可
+        }
 
-    // 滑鼠離開容器時，停止拖曳
-    slider.addEventListener('mouseleave', () => {
-        isDown = false;
-        // slider.classList.remove('is-dragging');
-    });
+        // 3. 應用變形
+        content.style.transform = `translateX(${currentPosition}px)`;
 
+        // 請求下一幀
+        animationFrameId = requestAnimationFrame(marquee);
+    }
+    
+    // 啟動自動輪播
+    function startMarquee() {
+        if (!isMarqueeRunning) {
+            isMarqueeRunning = true;
+            marquee();
+        }
+    }
 
-    // ===================================
-    // 3. 滑鼠移動事件 (mousemove)
-    // ===================================
+    // 暫停自動輪播
+    function pauseMarquee() {
+        isMarqueeRunning = false;
+        cancelAnimationFrame(animationFrameId);
+    }
+    
+    // --- 拖曳功能相關變數 ---
+    let isDragging = false;
+    let startX;         // 滑鼠按下時的 X 座標
+    let startPosition;  // 滑鼠按下時，內容的 currentPosition
 
-    // 注意：這個事件也要註冊在 document 上，這樣即使滑鼠拖曳到容器外移動，仍能維持滾動
-    document.addEventListener('mousemove', (e) => {
-        if (!isDown) return; // 如果滑鼠沒有按下，就跳過
-        
-        // 阻止預設行為，如選擇文字或拖曳圖片
+    // --- 拖曳事件處理 ---
+    
+    // 1. 滑鼠按下 (MouseDown / TouchStart)
+    const handleDown = (e) => {
+        // 阻止預設選取行為 (如果需要，但 CSS 應該已處理)
         e.preventDefault(); 
         
-        // a. 計算當前滑鼠相對於容器左側的 X 座標
-        const currentX = e.pageX - slider.offsetLeft;
-
-        // b. 計算滑鼠移動的距離 (Walk)
-        // 距離 = (當前 X - 起始 X)
-        // 拖曳方向與滾動方向相反，所以這個差值就是滾動要移動的距離
-        const walk = currentX - startX; 
+        isDragging = true;
+        pauseMarquee(); // **拖曳開始時，暫停自動輪播**
         
-        // c. 更新容器的滾動位置 (scrollLeft)
-        // 新滾動位置 = 舊滾動位置 - 移動距離
-        // 因為往右拖曳 (walk > 0) 內容要往左移 (scrollLeft 減少)，所以用減法
-        slider.scrollLeft = scrollLeft - walk;
-
-        // 提示：如果您希望滑動更靈敏，可以將公式改為：
-        // slider.scrollLeft = scrollLeft - (walk * 1.5); 
-    });
-    
-    
-    // ===================================
-    // 4. 觸控支援 (可選，但強烈建議)
-    // ===================================
-    // 為了在手機/平板上也能用手指拖曳，我們也需要加入觸控事件：
-    
-    slider.addEventListener('touchstart', (e) => {
-        isDown = true;
-        // 使用 e.touches[0].pageX 處理觸控的 X 座標
-        startX = e.touches[0].pageX - slider.offsetLeft;
-        scrollLeft = slider.scrollLeft;
-    });
-
-    slider.addEventListener('touchend', () => {
-        isDown = false;
-    });
-
-    slider.addEventListener('touchmove', (e) => {
-        if (!isDown) return;
-        // 阻止預設的垂直滾動行為，使水平拖曳更流暢
-        e.preventDefault(); 
+        // 獲取滑鼠或觸控的起始 X 座標
+        startX = e.pageX || e.touches[0].pageX; 
         
-        const currentX = e.touches[0].pageX - slider.offsetLeft;
-        const walk = currentX - startX;
+        // 記錄拖曳開始時的內容位置
+        startPosition = currentPosition; 
         
-        slider.scrollLeft = scrollLeft - walk;
-    });
-});
+        // 視覺反饋
+        slider.style.cursor = 'grabbing';
+    };
+
+    // 2. 滑鼠移動 (MouseMove / TouchMove)
+    const handleMove = (e) => {
+        if (!isDragging) return;
+
+        const currentX = e.pageX || e.touches[0].pageX;
+        const walk = currentX - startX; // 滑鼠移動的距離 (正值=往右拖，負值=往左拖)
+        
+        // 新的位置 = 舊的位置 + 滑鼠移動距離
+        // 因為 transform 是負值向左，所以直接相加即可
+        let newPosition = startPosition + walk; 
+
+        // 處理循環邊界 (可選，但讓拖曳更穩定)
+        // 當拖曳超過邊界時，重新調整 currentPosition，保持在 [-contentWidth, 0] 範圍內
+        if (newPosition > 0) {
+            newPosition -= contentWidth;
+        } else if (newPosition < -contentWidth) {
+            newPosition += contentWidth;
+        }
+
+        currentPosition = newPosition;
+        content.style.transform = `translateX(${currentPosition}px)`;
+    };
+
+    // 3. 滑鼠放開 (MouseUp / TouchEnd)
+    const handleUp = () => {
+        if (isDragging) {
+            isDragging = false;
+            slider.style.cursor = 'grab'; // 恢復游標
+            startMarquee(); // **拖曳結束後，恢復自動輪播**
+        }
+    };
+    
+    // --- 註冊事件監聽器 ---
+
+    // 拖曳開始
+    slider.addEventListener('mousedown', handleDown);
+    slider.addEventListener('touchstart', handleDown);
+
+    // 拖曳移動 (註冊在 document 上以捕捉拖出容器外的事件)
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('touchmove', handleMove);
+
+    // 拖曳結束
+    document.addEventListener('mouseup', handleUp);
+    document.addEventListener('touchend', handleUp);
+
+    // 啟動初始化動畫
+    startMarquee();
+    
+    // 設置初始游標
+    slider.style.cursor = 'grab';
+  });
+

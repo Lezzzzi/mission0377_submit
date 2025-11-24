@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function calculateContentWidth() {
         // 使用 offsetWidth 獲取元素的可視寬度
-        const totalContentWidth = content.offsetWidth;
+        const totalContentWidth = content.scrollWidth;
         contentWidth = totalContentWidth / 2;
         
         // 使用 scrollWidth 作為備用，雖然 less accurate
@@ -117,6 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const walk = currentX - startX; // 滑鼠移動的距離
         
         let newPosition = startPosition + walk; 
+        
+        //console.log(contentWidth,newPosition);
 
         // 處理循環邊界
         if (contentWidth > 0) {
@@ -130,6 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPosition = newPosition;
         content.style.transform = `translateX(${currentPosition}px)`;
     };
+
+
 
     // 處理滑鼠放開/觸控結束
     const handleUp = () => {

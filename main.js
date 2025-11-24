@@ -82,8 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPosition -= scrollSpeed; 
 
         // 循環邊界檢查：滾動超過原始內容的末端時，立即跳回起點
-        if (currentPosition <= -contentWidth) {
+        /*if (currentPosition <= -contentWidth) {
             currentPosition += contentWidth;
+        }*/
+        // 處理循環邊界
+        if (contentWidth > 0) {
+            if (currentPosition > 0) {
+                currentPosition -= contentWidth;
+            } else if (currentPosition < -contentWidth) {
+                currentPosition += contentWidth;
+            }
         }
 
         content.style.transform = `translateX(${currentPosition}px)`;
